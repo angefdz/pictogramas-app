@@ -1,1 +1,26 @@
-/.metadata/
+# Compiled class files
+*.class
+
+# Logs
+*.log
+
+# Eclipse files
+*.classpath
+*.project
+*.settings/
+bin/
+.metadata/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Maven
+target/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Otros
+.env
