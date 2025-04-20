@@ -13,25 +13,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import model.Frase;
-import repository.FraseRepository;
+import service.FraseService;
 
 @RestController
 @RequestMapping("/frases")
 public class FraseController {
 	
 	@Autowired
-	private FraseRepository fraseRepository;
+	private FraseService fraseService;
 
 	@PostMapping
 	public ResponseEntity<Frase> createFrase(@RequestBody Frase f){
-		Frase nuevaFrase = this.fraseRepository.save(f);
+		Frase nuevaFrase = this.fraseService.crearFrase(f);
 		return new ResponseEntity<>(nuevaFrase,HttpStatus.CREATED);
 	}
 	
 	
 	@GetMapping("/{usuario_id}")
 	public ResponseEntity<List<Frase>> getFraseByUser(@PathVariable long usuario_id){
-		List<Frase> frases = this.fraseRepository.findByUsuario_id(usuario_id);
+		List<Frase> frases = this.fraseService.obtenerFrasesByUsuario(usuario_id);
 		if (frases.isEmpty()) {
 	        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	    }
