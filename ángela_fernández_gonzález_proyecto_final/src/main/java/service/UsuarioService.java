@@ -19,7 +19,7 @@ public class UsuarioService {
         return usuarioRepository.findAll();
     }
 
-    public Optional<Usuario> obtenerPorId(int id) {
+    public Optional<Usuario> obtenerPorId(Long id) {
         return usuarioRepository.findById(id);
     }
 
@@ -27,14 +27,14 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-    public Optional<Usuario> cambiarContrasena(int id, String nuevaContrasena) {
+    public Optional<Usuario> cambiarContrasena(Long id, String nuevaContrasena) {
         return usuarioRepository.findById(id).map(u -> {
-            u.setContrasenaHash(nuevaContrasena);
+            u.setContrasena(nuevaContrasena);
             return usuarioRepository.save(u);
         });
     }
 
-    public boolean eliminarUsuario(int id) {
+    public boolean eliminarUsuario(Long id) {
         return usuarioRepository.findById(id).map(u -> {
             usuarioRepository.delete(u);
             return true;

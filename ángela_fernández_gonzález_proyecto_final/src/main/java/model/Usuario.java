@@ -19,7 +19,7 @@ public class Usuario {
 	//Clave primaria
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	private int idUsuario;
+	private Long idUsuario;
 	
 	@NotNull
 	@NotEmpty
@@ -28,34 +28,34 @@ public class Usuario {
 	
 	@NotEmpty
 	@NotNull
-	@Column(name="correo")
+	@Column(name="correo", unique = true)
 	private String email;
 	
 	@NotEmpty
 	@NotNull
 	@Column(name="contrasena_hash")
-	private String contrasenaHash;
+	private String contrasena;
 	
 	private List<Pictograma> pictogramasOcultos;
 	
-	public Usuario(int idUsuario, String nombre, String email, String contrasenaHash) {
+	public Usuario(Long idUsuario, String nombre, String email, String contrasenaHash) {
 		setIdUsuario(idUsuario);
 		setNombre(nombre);
 		setEmail(email);
-		setContrasenaHash(contrasenaHash);
+		setContrasena(contrasenaHash);
 	}
 	
 	public Usuario(String nombre, String email, String contrasenaHash) {
 		setNombre(nombre);
 		setEmail(email);
-		setContrasenaHash(contrasenaHash);
+		setContrasena(contrasenaHash);
 	}
 
-	public int getIdUsuario() {
+	public Long getIdUsuario() {
 		return idUsuario;
 	}
 
-	public void setIdUsuario(int idUsuario) {
+	public void setIdUsuario(Long idUsuario) {
 		this.idUsuario = idUsuario;
 	}
 
@@ -75,12 +75,12 @@ public class Usuario {
 		this.email = email;
 	}
 
-	public String getContrasenaHash() {
-		return contrasenaHash;
+	public String getContrasena() {
+		return contrasena;
 	}
 
-	public void setContrasenaHash(String contrasenaHash) {
-		this.contrasenaHash = contrasenaHash;
+	public void setContrasena(String contrasenaHash) {
+		this.contrasena = contrasenaHash;
 	}
 
 	public List<Pictograma> getPictogramasOcultos() {

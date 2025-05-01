@@ -17,7 +17,7 @@ public class Frase {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	private int idFrase;
+	private Long idFrase;
 	
 	@NotNull
 	@NotEmpty
@@ -29,7 +29,7 @@ public class Frase {
 	@Column
 	private Date fecha;
 	
-	public Frase (int idFrase, String text, Date date) {
+	public Frase (Long idFrase, String text, Date date) {
 		setIdFrase(idFrase);
 		setTexto(text);
 		setFecha(date);
@@ -40,11 +40,11 @@ public class Frase {
 		setFecha(date);
 	}
 
-	public int getIdFrase() {
+	public Long getIdFrase() {
 		return idFrase;
 	}
 
-	public void setIdFrase(int idPhrase) {
+	public void setIdFrase(Long idPhrase) {
 		this.idFrase = idPhrase;
 	}
 

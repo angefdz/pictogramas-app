@@ -1,6 +1,7 @@
 package repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,7 +11,9 @@ public interface PictogramaOcultoRepository extends JpaRepository<PictogramaOcul
 
     List<PictogramaOculto> findByUsuario_Id(Long usuarioId);
 
-    boolean existsByUsuario_IdAndPictograma_Id(Long usuarioId, Integer pictogramaId);
+    boolean existsByUsuario_IdAndPictograma_Id(Long usuarioId, Long pictogramaId);
 
-    void deleteByUsuario_IdAndPictograma_Id(Long usuarioId, Integer pictogramaId);
+    void deleteByUsuario_IdAndPictograma_Id(Long usuarioId, Long pictogramaId);
+
+	Optional<PictogramaOculto> findByPictogramaIdAndUsuarioId(Long idPictograma, Long idUsuario);
 }

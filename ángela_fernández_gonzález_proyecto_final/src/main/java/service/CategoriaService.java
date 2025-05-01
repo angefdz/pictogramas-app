@@ -23,15 +23,15 @@ public class CategoriaService {
         return categoriaRepository.findAllGenerales();
     }
 
-    public List<Categoria> obtenerCategoriasPersonalizadas(long usuarioId) {
+    public List<Categoria> obtenerCategoriasPersonalizadas(Long usuarioId) {
         return categoriaRepository.findAllPersonalizados(usuarioId);
     }
 
-    public Optional<Categoria> obtenerPorId(int id) {
+    public Optional<Categoria> obtenerPorId(Integer id) {
         return categoriaRepository.findById(id);
     }
 
-    public Optional<Categoria> actualizarCategoria(int id, Categoria categoriaActualizada) {
+    public Optional<Categoria> actualizarCategoria(Integer id, Categoria categoriaActualizada) {
         return categoriaRepository.findById(id).map(c -> {
             // Aquí puedes hacer una actualización parcial si lo necesitas
             c.setNombre(categoriaActualizada.getNombre());
@@ -40,7 +40,7 @@ public class CategoriaService {
         });
     }
 
-    public boolean eliminarCategoria(int id) {
+    public boolean eliminarCategoria(Integer id) {
         return categoriaRepository.findById(id).map(c -> {
             categoriaRepository.delete(c);
             return true;

@@ -39,7 +39,7 @@ public class UsuarioController {
 	
 	
 	@GetMapping("/{id}")
-	public ResponseEntity<Usuario> getUsuarioById(@PathVariable int id){
+	public ResponseEntity<Usuario> getUsuarioById(@PathVariable Long id){
 		return this.usuarioRepository.findById(id)
 				.map(usuario->ResponseEntity.ok(usuario))
 				.orElseGet(()->ResponseEntity.notFound().build());
@@ -56,11 +56,11 @@ public class UsuarioController {
 	
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<Usuario> changePassword(@PathVariable int id, 
+	public ResponseEntity<Usuario> changePassword(@PathVariable Long id, 
 			@RequestBody String nuevaContrasena){
 		return this.usuarioRepository.findById(id)
 				.map(user->{
-					user.setContrasenaHash(nuevaContrasena);
+					user.setContrasena(nuevaContrasena);
 					this.usuarioRepository.save(user);
 					return ResponseEntity.ok(user);
 				}).orElseGet(()-> ResponseEntity.notFound().build());
@@ -68,7 +68,7 @@ public class UsuarioController {
 	
 	
 	@DeleteMapping("/{id}")
-	public ResponseEntity<Object> deleteUsuario(@PathVariable int id){
+	public ResponseEntity<Object> deleteUsuario(@PathVariable Long id){
 		return this.usuarioRepository.findById(id)
 				.map(user->{
 					this.usuarioRepository.delete(user);

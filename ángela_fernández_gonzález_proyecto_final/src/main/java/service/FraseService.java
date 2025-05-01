@@ -16,7 +16,7 @@ public class FraseService {
 		return fraseRepository.save(frase);
 	}
 	
-	public List<Frase> obtenerFrasesByUsuario(long usuarioId){
+	public List<Frase> obtenerFrasesByUsuario(Long usuarioId){
 		return fraseRepository.findByUsuario_id(usuarioId);
 	}
 

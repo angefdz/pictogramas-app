@@ -12,7 +12,7 @@ public class Categoria {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private int idCategoria;
+    private Long idCategoria;
 
     @NotNull
     @NotEmpty
@@ -35,7 +35,7 @@ public class Categoria {
         this.imagen = imagen;
     }
 
-    public int getIdCategoria() {
+    public Long getIdCategoria() {
         return idCategoria;
     }
 

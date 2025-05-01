@@ -12,7 +12,7 @@ public class Pictograma {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private int idPictograma;
+    private Long idPictograma;
 
     @NotNull
     @NotEmpty
@@ -35,7 +35,7 @@ public class Pictograma {
         this.imagen = imagen;
     }
 
-    public int getIdPictograma() {
+    public Long getIdPictograma() {
         return idPictograma;
     }
 
