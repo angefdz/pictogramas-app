@@ -35,4 +35,15 @@ public class AuthService {
         return usuarioOpt.isPresent()
                 && passwordEncoder.matches(password, usuarioOpt.get().getContrasena());
     }
+    
+    public boolean login(String email, String password) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+
+        if (usuarioOpt.isEmpty()) {
+            return false;
+        }
+
+        Usuario usuario = usuarioOpt.get();
+        return passwordEncoder.matches(password, usuario.getContrasena());
+    }
 }

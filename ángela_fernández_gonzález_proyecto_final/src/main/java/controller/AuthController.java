@@ -1,9 +1,14 @@
 package controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import config.security.JwtUtil;
 import model.Usuario;
 import service.AuthService;
 
@@ -14,6 +19,10 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private config.security.JwtUtil jwtUtil;
+
+    
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody Usuario usuario) {
         if (!authService.registrarUsuario(usuario)) {
@@ -26,13 +35,20 @@ public class AuthController {
     public ResponseEntity<String> login(@RequestBody Usuario loginData) {
         boolean autenticado = authService.autenticarUsuario(
                 loginData.getEmail(),
-                loginData.getContrasena() // esto es el plain text que escribe el usuario
+                loginData.getContrasena() // contraseña en texto plano
         );
 
         if (!autenticado) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales inválidas");
         }
 
-        return ResponseEntity.ok("Inicio de sesión correcto");
+        // Si las credenciales son válidas, generamos el token
+        String token = jwtUtil.generateToken(loginData.getEmail());
+
+        // Devolvemos el token como respuesta
+        return ResponseEntity.ok(token);
     }
+
+    
+
 }
