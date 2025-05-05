@@ -1,15 +1,22 @@
 package config.security;
 
-import io.jsonwebtoken.*;
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 @Component
 public class JwtUtil {
 
-    private final String SECRET_KEY = "mi_clave_secreta_segura";
-    private final long EXPIRATION_MS = 86400000; // 1 día
+	@Value("${jwt.secret}")
+    private String SECRET_KEY;
+
+    @Value("${jwt.expiration}")
+    private long EXPIRATION_MS;
 
     // Genera el token usando el email como identificador
     public String generateToken(String email) {
