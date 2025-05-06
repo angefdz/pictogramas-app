@@ -23,6 +23,12 @@ public class Pictograma {
     @NotEmpty
     @Column(nullable = false)
     private String imagen;
+    
+    @NotNull
+    @NotEmpty
+    @Column(name = "tipo")
+    private String tipo; // puede ser "verbo", "sustantivo", etc.
+
 
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = true)
@@ -30,9 +36,10 @@ public class Pictograma {
 
     public Pictograma() {}
 
-    public Pictograma(String nombre, String imagen) {
+    public Pictograma(String nombre, String imagen, String tipo) {
         this.nombre = nombre;
         this.imagen = imagen;
+        this.tipo = tipo;
     }
 
     public Long getIdPictograma() {

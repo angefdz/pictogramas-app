@@ -12,8 +12,8 @@ public class PictogramaPersonalizado extends Pictograma {
 
     public PictogramaPersonalizado() {}
 
-    public PictogramaPersonalizado(String nombre, String imagen, Usuario usuario) {
-        super(nombre, imagen);
+    public PictogramaPersonalizado(String nombre, String imagen, Usuario usuario, String tipo) {
+        super(nombre, imagen,tipo);
         this.usuario = usuario;
     }
 
