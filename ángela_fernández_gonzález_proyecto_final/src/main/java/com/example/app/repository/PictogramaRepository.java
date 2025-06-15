@@ -26,29 +26,15 @@ public interface PictogramaRepository extends JpaRepository<Pictograma, Long> {
     @Query("SELECT p FROM Pictograma p WHERE p.id = :id")
     Pictograma buscarPorId(@Param("id") Long id);
     
-    @Modifying
-    @Query(value = "INSERT INTO pictograma_categoria (pictograma_id, categoria_id) VALUES (:pictogramaId, :categoriaId)", nativeQuery = true)
-    void insertarRelacion(@Param("pictogramaId") Long pictogramaId, @Param("categoriaId") Long categoriaId);
-
-    @Query(value = """
-    	    SELECT p.* FROM pictogramas p
-    	    JOIN pictograma_categoria pc ON p.id = pc.pictograma_id
-    	    WHERE pc.categoria_id = :categoriaId
-    	    AND (p.usuario_id IS NULL OR p.usuario_id = :usuarioId)
-    	""", nativeQuery = true)
-    	List<Pictograma> obtenerPictogramasDeCategoriaPorUsuario(
-    	    @Param("categoriaId") Long categoriaId,
-    	    @Param("usuarioId") Long usuarioId
-    	);
 
     @Query("""
     	    SELECT p FROM Pictograma p
-    	    WHERE p.usuario IS NULL OR p.usuario.id = :usuarioId
+    	    LEFT JOIN PictogramaOculto po ON po.pictograma.id = p.id AND po.usuario.id = :usuarioId
+    	    WHERE (p.usuario IS NULL OR p.usuario.id = :usuarioId)
+    	    AND po.id IS NULL
     	""")
     	List<Pictograma> findPictogramasVisiblesParaUsuario(@Param("usuarioId") Long usuarioId);
 
-    
-    
  
 
 }

@@ -14,6 +14,7 @@ import com.example.app.model.Pictograma;
 import com.example.app.model.PictogramaOculto;
 import com.example.app.model.Usuario;
 import com.example.app.repository.CategoriaRepository;
+import com.example.app.repository.PictogramaCategoriaRepository;
 import com.example.app.repository.PictogramaOcultoRepository;
 import com.example.app.repository.PictogramaRepository;
 import com.example.app.repository.UsuarioRepository;
@@ -32,6 +33,9 @@ public class PictogramaOcultoService {
 
     @Autowired
     private CategoriaRepository categoriaRepository;
+    
+    @Autowired
+    private PictogramaCategoriaRepository pictogramaCategoriaRepository;
 
     public boolean ocultarPictograma(Pictograma pictograma, Usuario usuario) {
         if (repository.existsByUsuarioIdAndPictogramaId(usuario.getId(), pictograma.getId())) {
@@ -69,18 +73,19 @@ public class PictogramaOcultoService {
     }
 
     private PictogramaConCategorias convertirADTO(Pictograma p) {
-        List<CategoriaSimple> categoriasDTO = new ArrayList<>();
-
-        List<Categoria> categorias = categoriaRepository.findByPictogramaId(p.getId());
-        for (Categoria c : categorias) {
-            Long usuarioIdCategoria = null;
-            if (c.getUsuario() != null) {
-                usuarioIdCategoria = c.getUsuario().getId();
-            }
-            categoriasDTO.add(new CategoriaSimple(c.getId(), c.getNombre(), c.getImagen(), usuarioIdCategoria));
+        if (p.getUsuario() == null) {
+            throw new IllegalArgumentException("Para pictogramas generales se necesita el ID del usuario para recuperar las categorías.");
         }
 
-        Long usuarioId = (p.getUsuario() != null) ? p.getUsuario().getId() : null;
+        Long usuarioId = p.getUsuario().getId(); 
+        List<Categoria> categorias = pictogramaCategoriaRepository
+            .buscarCategoriasDePictogramaPorUsuario(p.getId(), usuarioId);
+
+        List<CategoriaSimple> categoriasDTO = new ArrayList<>();
+        for (Categoria c : categorias) {
+            Long usuarioIdCategoria = (c.getUsuario() != null) ? c.getUsuario().getId() : null;
+            categoriasDTO.add(new CategoriaSimple(c.getId(), c.getNombre(), c.getImagen(), usuarioIdCategoria));
+        }
 
         return new PictogramaConCategorias(
             p.getId(),
@@ -91,6 +96,7 @@ public class PictogramaOcultoService {
             categoriasDTO
         );
     }
+
 
     private List<PictogramaConCategorias> convertirListaADTO(List<Pictograma> lista) {
         List<PictogramaConCategorias> resultado = new ArrayList<>();

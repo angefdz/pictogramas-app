@@ -1,34 +1,17 @@
 package com.example.app.model;
 
-import java.util.List;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "tipo", discriminatorType = DiscriminatorType.STRING)
 @Table(name = "categorias")
 public class Categoria {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
-    private Long id;  // <-- Cambio aquí
+    private Long id;
 
     @NotNull
     @NotEmpty
@@ -43,24 +26,6 @@ public class Categoria {
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = true)
     private Usuario usuario;
-    
-    @ManyToMany
-    @JoinTable(
-        name = "pictograma_categoria",
-        joinColumns = @JoinColumn(name = "categoria_id"),
-        inverseJoinColumns = @JoinColumn(name = "pictograma_id")
-    )
-    private List<Pictograma> pictogramas;
-
-
-    public List<Pictograma> getPictogramas() {
-        return pictogramas;
-    }
-
-    public void setPictogramas(List<Pictograma> pictogramas) {
-        this.pictogramas = pictogramas;
-    }
-
 
     public Categoria() {}
 
@@ -69,7 +34,7 @@ public class Categoria {
         this.imagen = imagen;
     }
 
-    public Long getId() {  // <-- Cambio aquí
+    public Long getId() {
         return id;
     }
 

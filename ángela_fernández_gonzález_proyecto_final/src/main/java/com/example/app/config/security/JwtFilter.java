@@ -32,19 +32,22 @@ public class JwtFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
         System.out.println("🔒 JwtFilter se está ejecutando para la ruta: " + path);
 
-        // Rutas públicas que no requieren autenticación
+     // Rutas públicas que no requieren autenticación
         if (path.equals("/auth/login") ||
             path.equals("/auth/register") ||
-            (path.equals("/pictogramas") && request.getMethod().equals("POST"))) {
+            (path.equals("/pictogramas/general") && request.getMethod().equals("POST")) ||
+            (path.equals("/pictogramas/generales") && request.getMethod().equals("GET"))) {
             filterChain.doFilter(request, response);
             return;
         }
+
 
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             String email = jwtUtil.extractEmail(token);
+            System.out.println(token);
 
             System.out.println("Email extraído del token: " + email);
 

@@ -37,6 +37,20 @@ public class CategoriaController {
 
         return principal.toString();
     }
+    
+    @PostMapping("/general")
+    public ResponseEntity<CategoriaConPictogramas> crearCategoriaGeneral(@RequestBody CategoriaConPictogramasInput input) {
+        System.out.println("Entra");
+
+        if (input == null || input.getNombre() == null || input.getNombre().isBlank()) {
+        	System.out.println("Tus muertos");
+            return ResponseEntity.badRequest().build();
+        }
+        System.out.println("intentándolo");
+        CategoriaConPictogramas nueva = categoriaService.crearDesdeInput(input); // ya pone usuario = null
+        return new ResponseEntity<>(nueva, HttpStatus.CREATED);
+    }
+
 
     @PostMapping
     public ResponseEntity<CategoriaConPictogramas> createCategoria(@RequestBody CategoriaConPictogramasInput input) {
@@ -173,5 +187,26 @@ public class CategoriaController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
+    
+    @GetMapping("/con-pictogramas")
+    public ResponseEntity<List<CategoriaConPictogramas>> obtenerCategoriasConPictogramas() {
+        try {
+        	System.out.println("ESTOY ENSEÑANDO LAS CATEGORÍAS");
+            String correo = getCorreoAutenticado();
+            Long usuarioId = usuarioService.obtenerIdPorCorreo(correo);
+
+            List<CategoriaConPictogramas> resultado = categoriaService.obtenerCategoriasConPictogramasVisibles(usuarioId);
+            if (resultado.isEmpty()) {
+            	System.out.println("VACÍO");
+                return ResponseEntity.noContent().build();
+            }
+            System.out.println("No está vacío");
+
+            return ResponseEntity.ok(resultado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
 
 }

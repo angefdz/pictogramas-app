@@ -30,13 +30,14 @@ public class SeguridadConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-            		.requestMatchers(
-            			    "/auth/register",
-            			    "/auth/login",
-            			    "/pictogramas",           // POST sin token
-            			    "/categorias"       // GET sin token
-            			).permitAll()
-
+                .requestMatchers(
+                    "/auth/register",
+                    "/auth/login",
+                    "/pictogramas", 
+                    "/pictogramas/generales",// POST sin token
+                    "/categorias",            // GET sin token
+                    "/pictogramas/general"     // POST sin token (esto es lo nuevo)
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

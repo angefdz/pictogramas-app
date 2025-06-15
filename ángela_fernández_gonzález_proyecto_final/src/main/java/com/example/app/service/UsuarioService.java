@@ -7,9 +7,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.app.dto.UsuarioSimple;
+import com.example.app.model.Categoria;
+import com.example.app.model.Pictograma;
+import com.example.app.model.PictogramaCategoria;
 // Eliminadas: Configuracion, TipoVoz, ConfiguracionRepository,
 // ya que 'crearUsuario' con la lógica de configuración no se usa aquí para el registro inicial.
 import com.example.app.model.Usuario;
+import com.example.app.repository.CategoriaRepository;
+import com.example.app.repository.PictogramaCategoriaRepository;
+import com.example.app.repository.PictogramaRepository;
 import com.example.app.repository.UsuarioRepository;
 
 @Service
@@ -17,6 +24,13 @@ public class UsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+    
+    @Autowired
+    private CategoriaRepository categoriaRepository;
+    
+    @Autowired PictogramaRepository pictogramaRepository;
+    
+    @Autowired PictogramaCategoriaRepository pictogramaCategoriaRepository;
 
     public List<Usuario> obtenerTodos() {
         return usuarioRepository.findAll();
@@ -47,6 +61,21 @@ public class UsuarioService {
             .map(Usuario::getId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + correo));
     }
+    
+    public Optional<Usuario> editarUsuarioPorCorreo(String correo, UsuarioSimple datos) {
+        return usuarioRepository.buscarPorEmail(correo).map(usuario -> {
+            
+            if (datos.getNombre() != null && !datos.getNombre().isBlank()) {
+                usuario.setNombre(datos.getNombre());
+            }
+
+            return usuarioRepository.save(usuario);
+        });
+    }
+
+    
+
+
 
 
 }

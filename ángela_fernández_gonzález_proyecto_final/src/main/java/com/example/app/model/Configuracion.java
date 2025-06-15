@@ -21,7 +21,7 @@ public class Configuracion implements Serializable {
     private Integer botonesPorPantalla;
 
     @Column(name = "mostrar_por_categoria")
-    private Boolean mostrarPorCategoria = false;
+    private Boolean mostrarPorCategoria = true;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_voz", columnDefinition = "enum('masculina','femenina')")

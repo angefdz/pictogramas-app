@@ -34,11 +34,24 @@ public class PictogramaController {
 
         return principal.toString();
     }
+    
+    @PostMapping("/general")
+    public ResponseEntity<PictogramaConCategorias> crearPictogramaGeneral(
+            @RequestBody PictogramaConCategoriasInput input
+    ) {
+        PictogramaConCategorias creado = pictogramaService.crearPictogramaUsuario(null, input);
+        return ResponseEntity.ok(creado);
+    }
+
 
     @PostMapping
     public ResponseEntity<PictogramaConCategorias> createPictograma(@RequestBody PictogramaConCategoriasInput input) {
-        return ResponseEntity.ok(pictogramaService.crearDesdeInputDTO(input));
+        String correo = getCorreoAutenticado();
+        Long usuarioId = usuarioService.obtenerIdPorCorreo(correo);
+
+        return ResponseEntity.ok(pictogramaService.crearDesdeInputDTO(input,usuarioId));
     }
+
 
     @GetMapping("/usuarios/{usuario_id}")
     public ResponseEntity<List<PictogramaConCategorias>> getPictogramasByUser(@PathVariable long usuario_id) {
@@ -49,17 +62,38 @@ public class PictogramaController {
         return new ResponseEntity<>(pictogramas, HttpStatus.OK);
     }
 
+    @GetMapping("/generales")
+    public ResponseEntity<List<PictogramaConCategorias>> getPictogramasGenerales() {
+    	System.out.println("ESSTOY ENTRANDO");
+        List<PictogramaConCategorias> pictogramas = pictogramaService.obtenerTodosConCategorias();
+        if (pictogramas.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(pictogramas);
+    }
+
+    
     @GetMapping("/{id}")
     public ResponseEntity<PictogramaConCategorias> getPictogramaById(@PathVariable Long id) {
-        return ResponseEntity.ok(pictogramaService.obtenerPictogramaConCategorias(id));
+        String correo = getCorreoAutenticado();
+        Long usuarioId = usuarioService.obtenerIdPorCorreo(correo);
+
+        return ResponseEntity.ok(pictogramaService.obtenerPictogramaConCategorias(id, usuarioId));
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<PictogramaConCategorias> updatePictograma(
             @PathVariable Long id,
             @RequestBody PictogramaConCategoriasInput input) {
-        return ResponseEntity.ok(pictogramaService.actualizarDesdeInput(id, input));
+        
+        String correo = getCorreoAutenticado();
+        Long idAutenticado = usuarioService.obtenerIdPorCorreo(correo);
+
+        PictogramaConCategorias actualizado = pictogramaService.actualizarDesdeInput(idAutenticado,id, input);
+        return ResponseEntity.ok(actualizado);
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deletePictograma(@PathVariable Long id) {
@@ -82,8 +116,13 @@ public class PictogramaController {
 
     @GetMapping("/{id}/con-categorias")
     public ResponseEntity<PictogramaConCategorias> getPictogramaConCategorias(@PathVariable Long id) {
-        return ResponseEntity.ok(pictogramaService.obtenerPictogramaConCategorias(id));
+        String correo = getCorreoAutenticado();
+        Long usuarioId = usuarioService.obtenerIdPorCorreo(correo);
+
+        PictogramaConCategorias dto = pictogramaService.obtenerPictogramaConCategorias(id, usuarioId);
+        return ResponseEntity.ok(dto);
     }
+
 
     @PostMapping("/por-ids")
     public ResponseEntity<List<PictogramaSimple>> obtenerPictogramasPorIds(@RequestBody List<Long> ids) {
@@ -119,6 +158,8 @@ public class PictogramaController {
         
         return ResponseEntity.ok(pictogramas);
     }
+    
+    
 
 
 }

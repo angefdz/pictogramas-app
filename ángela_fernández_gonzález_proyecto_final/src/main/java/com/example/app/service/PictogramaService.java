@@ -13,14 +13,22 @@ import com.example.app.dto.PictogramaConCategoriasInput;
 import com.example.app.dto.PictogramaSimple;
 import com.example.app.model.Categoria;
 import com.example.app.model.Pictograma;
+import com.example.app.model.PictogramaCategoria;
 import com.example.app.model.Usuario;
 import com.example.app.repository.CategoriaRepository;
+import com.example.app.repository.PictogramaCategoriaRepository;
 import com.example.app.repository.PictogramaRepository;
 import com.example.app.repository.UsuarioRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class PictogramaService {
 
+
+    @Autowired
+    private PictogramaCategoriaRepository pictogramaCategoriaRepository;
+    
     @Autowired
     private PictogramaRepository pictogramaRepository;
 
@@ -30,7 +38,7 @@ public class PictogramaService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    public PictogramaConCategorias crearDesdeInputDTO(PictogramaConCategoriasInput input) {
+    public PictogramaConCategorias crearDesdeInputDTO(PictogramaConCategoriasInput input, Long usuarioId) {
         Pictograma pictograma = new Pictograma();
         pictograma.setNombre(input.getNombre());
         pictograma.setTipo(input.getTipo());
@@ -42,10 +50,10 @@ public class PictogramaService {
         Pictograma guardado = pictogramaRepository.save(pictograma);
 
         // ✅ Luego se podrían asociar desde el lado de Categoria si hicieras edición en esas entidades
-        return convertirADTO(guardado);
+        return convertirADTO(guardado, usuarioId);
     }
 
-    public PictogramaConCategorias actualizarDesdeInput(Long id, PictogramaConCategoriasInput input) {
+    public PictogramaConCategorias actualizarDesdeInput(Long usuarioid, Long id, PictogramaConCategoriasInput input) {
         Pictograma pictograma = pictogramaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pictograma no encontrado"));
 
@@ -56,28 +64,28 @@ public class PictogramaService {
         Pictograma actualizado = pictogramaRepository.save(pictograma);
 
         // ✅ Actualizar relación con categorías
-        actualizarCategoriasDePictograma(actualizado.getId(), input.getCategorias());
+        actualizarCategoriasDePictograma(usuarioid,actualizado.getId(), input.getCategorias());
 
-        return convertirADTO(actualizado);
+        return convertirADTO(actualizado,usuarioid);
     }
 
 
-    public PictogramaConCategorias obtenerPictogramaConCategorias(Long id) {
+    public PictogramaConCategorias obtenerPictogramaConCategorias(Long id,Long usuarioId) {
         Pictograma pictograma = pictogramaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pictograma no encontrado"));
 
-        return convertirADTO(pictograma);
+        return convertirADTO(pictograma,usuarioId);
     }
 
     public List<PictogramaConCategorias> obtenerTodosConCategorias() {
         List<Pictograma> pictogramas = pictogramaRepository.findAllGenerales();
-        return convertirListaADTO(pictogramas);
+        return convertirListaADTO(pictogramas,null);
     }
 
 
     public List<PictogramaConCategorias> obtenerPictogramasDeUsuarioConCategorias(Long usuarioId) {
         List<Pictograma> pictogramas = pictogramaRepository.findAllPersonalizados(usuarioId);
-        return convertirListaADTO(pictogramas);
+        return convertirListaADTO(pictogramas,usuarioId);
     }
 
     public boolean eliminarPictograma(Long id) {
@@ -100,37 +108,40 @@ public class PictogramaService {
 
     // Helpers
 
-    private List<PictogramaConCategorias> convertirListaADTO(List<Pictograma> lista) {
+    private List<PictogramaConCategorias> convertirListaADTO(List<Pictograma> lista, Long usuarioId) {
         List<PictogramaConCategorias> resultado = new ArrayList<>();
         for (Pictograma p : lista) {
-            resultado.add(convertirADTO(p));
+            resultado.add(convertirADTO(p,usuarioId));
         }
         return resultado;
     }
 
-    private PictogramaConCategorias convertirADTO(Pictograma p) {
+    private PictogramaConCategorias convertirADTO(Pictograma p, Long usuarioIdParaFiltrarRelaciones) {
         List<CategoriaSimple> categoriasDTO = new ArrayList<>();
 
-        List<Categoria> categorias = categoriaRepository.findByPictogramaId(p.getId());
+        // Aunque el pictograma sea general, el usuario sí tiene relaciones propias con categorías
+        List<Categoria> categorias = pictogramaCategoriaRepository
+            .buscarCategoriasDePictogramaPorUsuario(p.getId(), usuarioIdParaFiltrarRelaciones);
+
         for (Categoria c : categorias) {
-            Long usuarioIdCategoria = null;
-            if (c.getUsuario() != null) {
-                usuarioIdCategoria = c.getUsuario().getId();
-            }
+            Long usuarioIdCategoria = (c.getUsuario() != null) ? c.getUsuario().getId() : null;
             categoriasDTO.add(new CategoriaSimple(c.getId(), c.getNombre(), c.getImagen(), usuarioIdCategoria));
         }
 
-        Long usuarioId = (p.getUsuario() != null) ? p.getUsuario().getId() : null;
+        // Este usuario es el creador del pictograma, puede ser null (si es general)
+        Long usuarioIdPictograma = (p.getUsuario() != null) ? p.getUsuario().getId() : null;
 
         return new PictogramaConCategorias(
             p.getId(),
             p.getNombre(),
             p.getImagen(),
             p.getTipo(),
-            usuarioId,
+            usuarioIdPictograma,
             categoriasDTO
         );
     }
+
+
 
     public List<PictogramaSimple> obtenerPictogramasPorIds(List<Long> ids) {
         List<PictogramaSimple> resultado = new ArrayList<>();
@@ -152,51 +163,67 @@ public class PictogramaService {
         return dto;
     }
     
+    @Transactional
     public PictogramaConCategorias crearPictogramaUsuario(Long usuarioId, PictogramaConCategoriasInput input) {
         Pictograma pictograma = new Pictograma();
         pictograma.setNombre(input.getNombre());
         pictograma.setTipo(input.getTipo());
         pictograma.setImagen(input.getImagen());
 
-        Usuario usuario = usuarioRepository.buscarPorId(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Usuario usuario = null;
+        if (usuarioId != null) {
+            usuario = usuarioRepository.buscarPorId(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        }
         pictograma.setUsuario(usuario);
+
         pictograma = pictogramaRepository.save(pictograma);
 
         if (input.getCategorias() != null && !input.getCategorias().isEmpty()) {
-            List<Categoria> categorias = categoriaRepository.findAllById(input.getCategorias());
-            for (Categoria categoria : categorias) {
-                categoria.getPictogramas().add(pictograma);
+            for (Long categoriaId : input.getCategorias()) {
+                Categoria categoria = categoriaRepository.findById(categoriaId)
+                    .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+
+                PictogramaCategoria relacion = new PictogramaCategoria();
+                relacion.setPictograma(pictograma);
+                relacion.setCategoria(categoria);
+                relacion.setUsuario(usuario);
+
+                pictogramaCategoriaRepository.save(relacion);
             }
-            categoriaRepository.saveAll(categorias);
         }
 
-        return convertirADTO(pictograma);
+        Long idUsuario = (usuario != null) ? usuario.getId() : null;
+        return convertirADTO(pictograma, idUsuario);
     }
 
 
-    public void actualizarCategoriasDePictograma(Long pictogramaId, List<Long> nuevasCategoriaIds) {
-        // 1. Buscar el pictograma
+    @Transactional
+    public void actualizarCategoriasDePictograma(Long usuarioId, Long pictogramaId, List<Long> nuevasCategoriaIds) {
+        // Verificamos que el pictograma exista
         Pictograma pictograma = pictogramaRepository.findById(pictogramaId)
             .orElseThrow(() -> new RuntimeException("Pictograma no encontrado"));
 
-        // 2. Eliminar el pictograma de todas las categorías actuales
-        List<Categoria> categoriasActuales = categoriaRepository.findByPictogramaId(pictogramaId);
-        for (Categoria categoria : categoriasActuales) {
-            categoria.getPictogramas().removeIf(p -> p.getId().equals(pictogramaId));
-            categoriaRepository.save(categoria);
-        }
+        Usuario usuario = usuarioRepository.buscarPorId(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 3. Añadir el pictograma a las nuevas categorías
-        for (Long nuevaId : nuevasCategoriaIds) {
-            categoriaRepository.findById(nuevaId).ifPresent(cat -> {
-                if (!cat.getPictogramas().contains(pictograma)) {
-                    cat.getPictogramas().add(pictograma);
-                    categoriaRepository.save(cat);
-                }
-            });
+        // Eliminar relaciones anteriores del usuario con ese pictograma
+        pictogramaCategoriaRepository.eliminarPorUsuarioYPictograma(usuarioId, pictogramaId);
+
+        // Crear nuevas relaciones
+        for (Long categoriaId : nuevasCategoriaIds) {
+            Categoria categoria = categoriaRepository.findById(categoriaId)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+
+            PictogramaCategoria relacion = new PictogramaCategoria();
+            relacion.setUsuario(usuario);
+            relacion.setPictograma(pictograma);
+            relacion.setCategoria(categoria);
+
+            pictogramaCategoriaRepository.save(relacion);
         }
     }
+
 
     public List<PictogramaSimple> obtenerPictogramasVisibles(Long usuarioId) {
         List<Pictograma> pictogramas = pictogramaRepository.findPictogramasVisiblesParaUsuario(usuarioId);
@@ -210,7 +237,7 @@ public class PictogramaService {
     }
 
     public List<PictogramaSimple> obtenerPictogramasPorCategoria(Long categoriaId, Long usuarioId) {
-        List<Pictograma> pictos = pictogramaRepository.obtenerPictogramasDeCategoriaPorUsuario(categoriaId, usuarioId);
+        List<Pictograma> pictos = pictogramaCategoriaRepository.obtenerPictogramasDeCategoriaPorUsuario(categoriaId, usuarioId);
         List<PictogramaSimple> resultado = new ArrayList<>();
 
         for (Pictograma pictograma : pictos) {
