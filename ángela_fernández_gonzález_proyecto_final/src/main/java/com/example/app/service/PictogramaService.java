@@ -43,13 +43,14 @@ public class PictogramaService {
         pictograma.setNombre(input.getNombre());
         pictograma.setTipo(input.getTipo());
         pictograma.setImagen(input.getImagen());
-        pictograma.setUsuario(null);
-        
 
-        // ✅ Guardamos el pictograma sin necesidad de asociar categorías directamente
+        if (usuarioId != null) {
+            usuarioRepository.buscarPorId(usuarioId).ifPresent(pictograma::setUsuario);
+        } else {
+            pictograma.setUsuario(null);
+        }
+
         Pictograma guardado = pictogramaRepository.save(pictograma);
-
-        // ✅ Luego se podrían asociar desde el lado de Categoria si hicieras edición en esas entidades
         return convertirADTO(guardado, usuarioId);
     }
 
@@ -147,19 +148,22 @@ public class PictogramaService {
         List<PictogramaSimple> resultado = new ArrayList<>();
 
         for (Long id : ids) {
-            pictogramaRepository.findById(id).ifPresent(p -> {
+            Pictograma p = pictogramaRepository.buscarPorId(id);
+            if (p != null) {
                 resultado.add(convertirASimple(p));
-            });
+            }
         }
 
         return resultado;
     }
+
 
     private PictogramaSimple convertirASimple(Pictograma p) {
         PictogramaSimple dto = new PictogramaSimple();
         dto.setId(p.getId());
         dto.setNombre(p.getNombre());
         dto.setImagen(p.getImagen());
+        dto.setTipo(p.getTipo());
         return dto;
     }
     
@@ -227,6 +231,11 @@ public class PictogramaService {
 
     public List<PictogramaSimple> obtenerPictogramasVisibles(Long usuarioId) {
         List<Pictograma> pictogramas = pictogramaRepository.findPictogramasVisiblesParaUsuario(usuarioId);
+        if (pictogramas.isEmpty()) {
+        	System.out.println("no he encontrado nada de nada");
+        }else {
+        	System.out.println("No se de donde coño viene el error");
+        }
         List<PictogramaSimple> resultado = new ArrayList<>();
 
         for (Pictograma pictograma : pictogramas) {
@@ -246,4 +255,12 @@ public class PictogramaService {
 
         return resultado;
     }
+
+    public List<String> obtenerNombresPictogramasGenerales() {
+        return pictogramaRepository.findAllGenerales()
+            .stream()
+            .map(Pictograma::getNombre)
+            .toList();
+    }
+
 }

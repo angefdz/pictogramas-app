@@ -25,12 +25,6 @@ public class AuthService {
 
 	
 	@Autowired
-	private CategoriaRepository categoriaRepository;
-	
-	@Autowired
-	private PictogramaRepository pictogramaRepository;
-	
-	@Autowired
 	private PictogramaCategoriaRepository pictogramaCategoriaRepository;
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -75,7 +69,7 @@ public class AuthService {
         if (!"manual".equalsIgnoreCase(usuario.getMetodoAutenticacion())) {
             return false; 
         }
-
+        System.out.println(passwordEncoder.matches(contrasenaPlano, usuario.getContrasena()));
         return passwordEncoder.matches(contrasenaPlano, usuario.getContrasena());
     }
 
@@ -116,7 +110,26 @@ public class AuthService {
     	    relacion.setUsuario(usuario);
     	    pictogramaCategoriaRepository.save(relacion);
     	}
- }
+    }
+    
+    @Transactional
+    public boolean cambiarContrasena(String email, String contrasenaActual, String nuevaContrasena) {
+        Optional<Usuario> optional = usuarioRepository.buscarPorEmail(email);
+        if (optional.isEmpty()) return false;
+
+        Usuario usuario = optional.get();
+
+        if (!passwordEncoder.matches(contrasenaActual, usuario.getContrasena())) {
+            return false; // la contraseña actual no coincide
+        }
+
+        String contrasenaEncriptada = passwordEncoder.encode(nuevaContrasena);
+        usuario.setContrasena(contrasenaEncriptada);
+        usuarioRepository.save(usuario);
+
+        return true;
+    }
+
      
     
 }

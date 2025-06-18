@@ -34,9 +34,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
      // Rutas públicas que no requieren autenticación
         if (path.equals("/auth/login") ||
-            path.equals("/auth/register") ||
-            (path.equals("/pictogramas/general") && request.getMethod().equals("POST")) ||
-            (path.equals("/pictogramas/generales") && request.getMethod().equals("GET"))) {
+            path.equals("/auth/register")) {
             filterChain.doFilter(request, response);
             return;
         }

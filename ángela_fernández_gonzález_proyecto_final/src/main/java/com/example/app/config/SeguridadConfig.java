@@ -33,9 +33,7 @@ public class SeguridadConfig {
                 .requestMatchers(
                     "/auth/register",
                     "/auth/login",
-                    "/pictogramas", 
                     "/pictogramas/generales",// POST sin token
-                    "/categorias",            // GET sin token
                     "/pictogramas/general"     // POST sin token (esto es lo nuevo)
                 ).permitAll()
                 .anyRequest().authenticated()

@@ -1,6 +1,7 @@
 package com.example.app.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -34,6 +35,12 @@ public interface PictogramaRepository extends JpaRepository<Pictograma, Long> {
     	    AND po.id IS NULL
     	""")
     	List<Pictograma> findPictogramasVisiblesParaUsuario(@Param("usuarioId") Long usuarioId);
+
+	Optional<Pictograma> findByUsuarioIsNull();
+	
+	@Query("SELECT COUNT(p) > 0 FROM Pictograma p WHERE LOWER(p.nombre) = LOWER(:nombre) AND p.usuario IS NULL")
+	boolean existsPictogramaGeneralByNombre(@Param("nombre") String nombre);
+
 
  
 

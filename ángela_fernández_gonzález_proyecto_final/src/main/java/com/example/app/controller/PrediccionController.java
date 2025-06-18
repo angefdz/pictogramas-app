@@ -1,35 +1,19 @@
-// PrediccionController.java
+// src/main/java/com/example/app/controller/PrediccionController.java
 package com.example.app.controller;
 
-import org.springframework.http.*;
+import com.example.app.service.PrediccionService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-
-import com.example.app.dto.PrediccionRequest;
 
 @RestController
 @RequestMapping("/prediccion")
 public class PrediccionController {
 
-    @PostMapping
-    public ResponseEntity<String> predecir(@RequestBody PrediccionRequest dto) {
-        // Crear RestTemplate para enviar la petición
-        RestTemplate restTemplate = new RestTemplate();
-        String url = "http://localhost:5000/predecir";
+    @Autowired
+    private PrediccionService prediccionService;
 
-        // Preparar cabeceras
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        // Crear cuerpo de la petición con JSON
-        String cuerpo = "{\"frase\": \"" + dto.getFraseParcial() + "\"}";
-
-        HttpEntity<String> request = new HttpEntity<>(cuerpo, headers);
-
-        // Enviar POST al microservicio Flask
-        ResponseEntity<String> respuesta = restTemplate.postForEntity(url, request, String.class);
-
-        // Devolver la predicción tal cual
-        return ResponseEntity.ok(respuesta.getBody());
+    @GetMapping
+    public String sugerir(@RequestParam String frase) {
+        return prediccionService.obtenerSugerencia(frase);
     }
 }

@@ -71,46 +71,15 @@ public class UsuarioController {
     }
 
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Usuario> changePassword(@PathVariable Long id,
-                                                  @RequestBody String nuevaContrasena) {
-        // Usa el servicio, que devuelve un Optional
-        Optional<Usuario> updatedUser = usuarioService.cambiarContrasena(id, nuevaContrasena);
-        return updatedUser
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
+    @DeleteMapping("/me")
+    public ResponseEntity<Object> eliminarMiCuenta() {
+        String correo = getCorreoAutenticado();
+        boolean eliminado = usuarioService.eliminarUsuarioPorCorreo(correo);
 
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteUsuario(@PathVariable Long id) {
-        // Usa el servicio, que devuelve un boolean
-        boolean deleted = usuarioService.eliminarUsuario(id);
-        if (deleted) {
+        if (eliminado) {
             return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    
-    @PutMapping("/yo")
-    public ResponseEntity<UsuarioSimple> editarUsuarioActual(@RequestBody UsuarioSimple datos) {
-        try {
-            String correo = getCorreoAutenticado();
-            Optional<Usuario> usuarioEditado = usuarioService.editarUsuarioPorCorreo(correo, datos);
-
-            return usuarioEditado
-                .map(usuario -> {
-                    UsuarioSimple dto = new UsuarioSimple();
-                    dto.setId(usuario.getId());
-                    dto.setNombre(usuario.getNombre());
-                    dto.setCorreo(usuario.getEmail());
-                    return ResponseEntity.ok(dto);
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(404).body("Usuario no encontrado.");
         }
     }
 

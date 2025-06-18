@@ -32,9 +32,11 @@ public class CategoriaController {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (principal instanceof Usuario usuario) {
+        	System.out.println("El correo de los cojones es: "+ usuario.getEmail());
             return usuario.getEmail();
         }
-
+        
+        System.out.println("No se que cojones tiene que mandar aquí: "+ principal.toString());
         return principal.toString();
     }
     
@@ -101,14 +103,28 @@ public class CategoriaController {
         Optional<Categoria> categoriaOpt = categoriaService.obtenerCategoriaPorId(id);
         if (categoriaOpt.isEmpty()) return ResponseEntity.notFound().build();
 
-        if (!categoriaOpt.get().getUsuario().getId().equals(idAutenticado)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        Categoria categoria = categoriaOpt.get();
+
+        if (categoria.getUsuario() == null) {
+            // ✅ Categoría general → solo actualizar relaciones
+            categoriaService.actualizarPictogramasRelacionados(id, input.getPictogramas(), idAutenticado);
+            CategoriaConPictogramas resultado = categoriaService.obtenerCategoriaConPictogramas(id, idAutenticado);
+            return ResponseEntity.ok(resultado);
         }
 
-        Optional<CategoriaConPictogramas> actualizada = categoriaService.actualizarDesdeInput(id, input);
-        return actualizada.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        if (categoria.getUsuario().getId().equals(idAutenticado)) {
+            // ✅ Categoría personalizada → actualizar todo
+            Optional<CategoriaConPictogramas> actualizada = categoriaService.actualizarDesdeInput(id, input);
+            return actualizada.map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+        }
+
+        // ❌ Categoría de otro usuario → denegar acceso
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
+    
+
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteCategoria(@PathVariable Long id) {
@@ -117,19 +133,6 @@ public class CategoriaController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
-    }
-
-    @GetMapping("/{id}/con-pictogramas")
-    public ResponseEntity<CategoriaConPictogramas> getCategoriaConPictogramas(@PathVariable Long id) {
-        String correo = getCorreoAutenticado();
-
-        try {
-            Long idAutenticado = usuarioService.obtenerIdPorCorreo(correo);
-            CategoriaConPictogramas categoria = categoriaService.obtenerCategoriaConPictogramas(id, idAutenticado);
-            return ResponseEntity.ok(categoria);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
     }
 
     @PostMapping("/usuario")
@@ -190,23 +193,26 @@ public class CategoriaController {
     
     @GetMapping("/con-pictogramas")
     public ResponseEntity<List<CategoriaConPictogramas>> obtenerCategoriasConPictogramas() {
+    	System.out.println(">>> Entrando en obtenerCategoriasConPictogramas");
         try {
-        	System.out.println("ESTOY ENSEÑANDO LAS CATEGORÍAS");
+            System.out.println("ESTOY ENSEÑANDO LAS CATEGORÍAS");
             String correo = getCorreoAutenticado();
             Long usuarioId = usuarioService.obtenerIdPorCorreo(correo);
-
+            System.out.println("Mi usuario es:" +  usuarioId);
             List<CategoriaConPictogramas> resultado = categoriaService.obtenerCategoriasConPictogramasVisibles(usuarioId);
+
             if (resultado.isEmpty()) {
-            	System.out.println("VACÍO");
+                System.out.println("VACÍO");
                 return ResponseEntity.noContent().build();
             }
-            System.out.println("No está vacío");
+
 
             return ResponseEntity.ok(resultado);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
+
 
 
 }

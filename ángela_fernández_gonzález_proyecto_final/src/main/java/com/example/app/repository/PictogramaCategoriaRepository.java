@@ -22,13 +22,17 @@ public interface PictogramaCategoriaRepository extends JpaRepository<PictogramaC
     List<PictogramaCategoria> findAllByUsuarioId(@Param("usuarioId") Long usuarioId);
 
     @Query("""
-        SELECT pc FROM PictogramaCategoria pc
-        WHERE pc.categoria.id = :categoriaId AND pc.usuario.id = :usuarioId
-    """)
-    List<PictogramaCategoria> findByCategoriaIdAndUsuarioId(
-        @Param("categoriaId") Long categoriaId,
-        @Param("usuarioId") Long usuarioId
-    );
+    	    SELECT pc FROM PictogramaCategoria pc
+    	    LEFT JOIN PictogramaOculto po ON po.pictograma.id = pc.pictograma.id AND po.usuario.id = :usuarioId
+    	    WHERE pc.categoria.id = :categoriaId
+    	      AND (pc.usuario.id = :usuarioId)
+    	      AND po.id IS NULL
+    	""")
+    	List<PictogramaCategoria> findByCategoriaIdAndUsuarioId(
+    	    @Param("categoriaId") Long categoriaId,
+    	    @Param("usuarioId") Long usuarioId
+    	);
+
   
     @Query("""
         SELECT pc FROM PictogramaCategoria pc
@@ -68,7 +72,7 @@ public interface PictogramaCategoriaRepository extends JpaRepository<PictogramaC
     List<PictogramaCategoria> findAllGenerales();
 
     @Modifying
-    @Query("DELETE FROM PictogramaCategoria pc WHERE pc.categoria.id = :categoriaId AND (:usuarioId IS NULL OR pc.usuario.id = :usuarioId)")
+    @Query("DELETE FROM PictogramaCategoria pc WHERE pc.categoria.id = :categoriaId AND ( pc.usuario.id = :usuarioId)")
     void eliminarRelacionesPorCategoriaYUsuario(@Param("categoriaId") Long categoriaId, @Param("usuarioId") Long usuarioId);
 
     @Modifying
@@ -81,14 +85,14 @@ public interface PictogramaCategoriaRepository extends JpaRepository<PictogramaC
 
     @Query("""
     	    SELECT pc.pictograma FROM PictogramaCategoria pc
+    	    LEFT JOIN PictogramaOculto po ON po.pictograma = pc.pictograma AND po.usuario.id = :usuarioId
     	    WHERE pc.categoria.id = :categoriaId
-    	    AND (pc.usuario.id = :usuarioId OR pc.pictograma.usuario IS NULL)
+    	      AND pc.usuario.id = :usuarioId
     	""")
     	List<Pictograma> obtenerPictogramasDeCategoriaPorUsuario(
     	    @Param("categoriaId") Long categoriaId,
     	    @Param("usuarioId") Long usuarioId
     	);
 
-    
 
 }

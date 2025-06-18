@@ -111,7 +111,7 @@ public class CategoriaService {
                 for (Long pictogramaId : input.getPictogramas()) {
                     PictogramaCategoria relacion = new PictogramaCategoria();
                     relacion.setCategoria(actualizada);
-                    relacion.setPictograma(pictogramaRepository.buscarPorId(id));
+                    relacion.setPictograma(pictogramaRepository.buscarPorId(pictogramaId));
                     relacion.setUsuario(categoria.getUsuario());
                     pictogramaCategoriaRepository.save(relacion);
                 }
@@ -232,7 +232,30 @@ public class CategoriaService {
             .toList();
     }
 
-    
+    @Transactional
+    public void actualizarPictogramasRelacionados(Long categoriaId, List<Long> pictogramaIds, Long usuarioId) {
+        Categoria categoria = categoriaRepository.findById(categoriaId)
+            .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+
+        // Eliminar relaciones actuales del usuario con esta categoría
+        pictogramaCategoriaRepository.eliminarRelacionesPorCategoriaYUsuario(categoriaId, usuarioId);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(usuarioId);
+
+        for (Long pictogramaId : pictogramaIds) {
+            Pictograma pictograma = pictogramaRepository.buscarPorId(pictogramaId);
+
+            PictogramaCategoria nuevaRelacion = new PictogramaCategoria();
+            nuevaRelacion.setCategoria(categoria);
+            nuevaRelacion.setPictograma(pictograma);
+            nuevaRelacion.setUsuario(usuario);
+
+            pictogramaCategoriaRepository.save(nuevaRelacion);
+        }
+    }
+
+
     public List<CategoriaConPictogramas> obtenerCategoriasConPictogramasVisibles(Long usuarioId) {
         System.out.println("PRIMER PASO");
         
@@ -247,10 +270,10 @@ public class CategoriaService {
             try {
                 List<PictogramaCategoria> relaciones = pictogramaCategoriaRepository
                     .findByCategoriaIdAndUsuarioId(categoria.getId(), usuarioId);
-                System.out.println("Relaciones obtenidas para categoría: " + categoria.getId());
+                
 
+                // Aquí puedes añadir el filtrado con Set si quieres (opcional)
                 List<PictogramaSimple> pictos = new ArrayList<>();
-
                 for (PictogramaCategoria rel : relaciones) {
                     Pictograma p = rel.getPictograma();
                     PictogramaSimple dto = new PictogramaSimple(
@@ -261,9 +284,6 @@ public class CategoriaService {
                     );
                     pictos.add(dto);
                 }
-
-                System.out.println("Pictogramas añadidos para categoría: " + categoria.getId());
-
                 Long usuarioCatId = (categoria.getUsuario() != null)
                     ? categoria.getUsuario().getId()
                     : null;
@@ -285,9 +305,6 @@ public class CategoriaService {
 
         return resultado;
     }
-
-
-
 
 
 }

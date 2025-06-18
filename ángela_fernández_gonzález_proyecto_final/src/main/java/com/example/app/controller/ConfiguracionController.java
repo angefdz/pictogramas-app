@@ -36,6 +36,7 @@ public class ConfiguracionController {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (principal instanceof Usuario usuario) {
+            System.out.println("El email es (por favor funciona: "+usuario.getEmail());
             return usuario.getEmail();
         }
 

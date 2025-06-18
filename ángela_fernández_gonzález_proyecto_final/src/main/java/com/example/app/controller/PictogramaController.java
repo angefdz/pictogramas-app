@@ -29,16 +29,19 @@ public class PictogramaController {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (principal instanceof Usuario usuario) {
+        	System.out.println("El correo de los putos cojones es: "+usuario.getEmail());
             return usuario.getEmail();
         }
 
         return principal.toString();
     }
     
+    
     @PostMapping("/general")
     public ResponseEntity<PictogramaConCategorias> crearPictogramaGeneral(
             @RequestBody PictogramaConCategoriasInput input
     ) {
+    	System.out.println("Entra esto????");
         PictogramaConCategorias creado = pictogramaService.crearPictogramaUsuario(null, input);
         return ResponseEntity.ok(creado);
     }
@@ -47,19 +50,21 @@ public class PictogramaController {
     @PostMapping
     public ResponseEntity<PictogramaConCategorias> createPictograma(@RequestBody PictogramaConCategoriasInput input) {
         String correo = getCorreoAutenticado();
+        System.out.println("El correo de los putísimos cojones estoy harta: "+ correo);
         Long usuarioId = usuarioService.obtenerIdPorCorreo(correo);
-
+        System.out.println("El usuario de los putísimos cojones es: "+usuarioId);
         return ResponseEntity.ok(pictogramaService.crearDesdeInputDTO(input,usuarioId));
     }
 
 
-    @GetMapping("/usuarios/{usuario_id}")
-    public ResponseEntity<List<PictogramaConCategorias>> getPictogramasByUser(@PathVariable long usuario_id) {
-        List<PictogramaConCategorias> pictogramas = pictogramaService.obtenerPictogramasDeUsuarioConCategorias(usuario_id);
-        if (pictogramas.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-        return new ResponseEntity<>(pictogramas, HttpStatus.OK);
+    @PostMapping("/yo")
+    public ResponseEntity<PictogramaConCategorias> createPictogramaUsuario(@RequestBody PictogramaConCategoriasInput input) {
+        String correo = getCorreoAutenticado();
+        System.out.println("El correo de los putísimos cojones estoy harta: "+ correo);
+        Long usuarioId = usuarioService.obtenerIdPorCorreo(correo);
+        System.out.println("El usuario de los putísimos cojones es: "+usuarioId);
+        System.out.println("No entiendo nada");
+        return ResponseEntity.ok(pictogramaService.crearDesdeInputDTO(input,usuarioId));
     }
 
     @GetMapping("/generales")
@@ -71,6 +76,13 @@ public class PictogramaController {
         }
         return ResponseEntity.ok(pictogramas);
     }
+    
+    @GetMapping("/generales/nombres")
+    public ResponseEntity<List<String>> getNombresPictogramasGenerales() {
+        List<String> nombres = pictogramaService.obtenerNombresPictogramasGenerales();
+        return ResponseEntity.ok(nombres);
+    }
+
 
     
     @GetMapping("/{id}")
@@ -107,6 +119,7 @@ public class PictogramaController {
             @RequestBody PictogramaConCategoriasInput input
     ) {
         try {
+        	System.out.println("Aquí?");
             PictogramaConCategorias creado = pictogramaService.crearPictogramaUsuario(id, input);
             return ResponseEntity.ok(creado);
         } catch (RuntimeException e) {
@@ -133,11 +146,13 @@ public class PictogramaController {
     @GetMapping
     public ResponseEntity<List<PictogramaSimple>> getPictogramasVisibles() {
         try {
+        	System.out.println("No esta ni siquiera entrando");
             String correo = getCorreoAutenticado();
             Long usuarioId = usuarioService.obtenerIdPorCorreo(correo);
-
+            System.out.println("Parece que no se llega a ejecutar nunca");
             List<PictogramaSimple> pictogramas = pictogramaService.obtenerPictogramasVisibles(usuarioId);
             if (pictogramas.isEmpty()) {
+            	System.out.println("Estoy vacioooooo");
                 return ResponseEntity.noContent().build();
             }
 

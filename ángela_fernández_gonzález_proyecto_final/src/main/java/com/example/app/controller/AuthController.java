@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.app.config.security.JwtUtil;
@@ -22,6 +23,16 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    
+    private String getCorreoAutenticado() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (principal instanceof Usuario usuario) {
+            return usuario.getEmail();
+        }
+
+        return principal.toString();
+    }
     // Registro manual
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody Usuario usuario) {
@@ -85,4 +96,30 @@ public class AuthController {
                 "usuarioId", usuario.getId()
         ));
     }
+    
+    @PutMapping("/cambiar-contrasena")
+    public ResponseEntity<String> cambiarContrasena(@RequestBody Map<String, String> body) {
+        try {
+            String email = getCorreoAutenticado();  // reutilizas tu método seguro
+
+            String contrasenaActual = body.get("contrasenaActual");
+            String nuevaContrasena = body.get("nuevaContrasena");
+
+            if (contrasenaActual == null || nuevaContrasena == null) {
+                return ResponseEntity.badRequest().body("Faltan datos obligatorios");
+            }
+
+            boolean cambiada = authService.cambiarContrasena(email, contrasenaActual, nuevaContrasena);
+
+            if (cambiada) {
+                return ResponseEntity.ok("Contraseña actualizada correctamente");
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("La contraseña actual no es válida");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido o expirado");
+        }
+    }
+
 }

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,10 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
     
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
     @Autowired
     private CategoriaRepository categoriaRepository;
     
@@ -37,16 +42,19 @@ public class UsuarioService {
     }
 
     public Optional<Usuario> obtenerPorId(Long id) {
-        return usuarioRepository.buscarPorId(id);
+        return usuarioRepository.buscarPorId(id);}
+    
+    
+    public boolean eliminarUsuarioPorCorreo(String correo) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.buscarPorEmail(correo);
+        if (usuarioOpt.isEmpty()) {
+            return false;
+        }
+
+        usuarioRepository.deleteById(usuarioOpt.get().getId());
+        return true;
     }
 
-    @Transactional
-    public Optional<Usuario> cambiarContrasena(Long id, String nuevaContrasena) {
-        return usuarioRepository.buscarPorId(id).map(u -> {
-            u.setContrasena(nuevaContrasena);
-            return usuarioRepository.save(u);
-        });
-    }
 
     @Transactional
     public boolean eliminarUsuario(Long id) {
@@ -72,6 +80,15 @@ public class UsuarioService {
             return usuarioRepository.save(usuario);
         });
     }
+
+    @Transactional
+    public Optional<Usuario> cambiarContrasena(String correo, String nuevaContrasena) {
+        return usuarioRepository.buscarPorEmail(correo).map(u -> {
+            u.setContrasena(passwordEncoder.encode(nuevaContrasena)); // ✅ Igual que al registrarse
+            return usuarioRepository.save(u);
+        });
+    }
+  
 
     
 

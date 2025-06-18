@@ -72,12 +72,8 @@ public class PictogramaOcultoService {
         return repository.existsByPictogramaIdAndUsuarioId(pictogramaId, usuarioId);
     }
 
-    private PictogramaConCategorias convertirADTO(Pictograma p) {
-        if (p.getUsuario() == null) {
-            throw new IllegalArgumentException("Para pictogramas generales se necesita el ID del usuario para recuperar las categorías.");
-        }
+    private PictogramaConCategorias convertirADTO(Pictograma p, Long usuarioId) {
 
-        Long usuarioId = p.getUsuario().getId(); 
         List<Categoria> categorias = pictogramaCategoriaRepository
             .buscarCategoriasDePictogramaPorUsuario(p.getId(), usuarioId);
 
@@ -98,22 +94,27 @@ public class PictogramaOcultoService {
     }
 
 
-    private List<PictogramaConCategorias> convertirListaADTO(List<Pictograma> lista) {
+    private List<PictogramaConCategorias> convertirListaADTO(List<Pictograma> lista, Long usuarioId) {
         List<PictogramaConCategorias> resultado = new ArrayList<>();
         for (Pictograma p : lista) {
-            resultado.add(convertirADTO(p));
+            resultado.add(convertirADTO(p,usuarioId));
         }
         return resultado;
     }
 
     public List<PictogramaConCategorias> obtenerPictogramasOcultos(Long usuarioId) {
         List<PictogramaOculto> ocultos = repository.obtenerPictogramasOcultosPorUsuario(usuarioId);
+        if (ocultos.isEmpty()) {
+        	System.out.println("Estoy vaciooooo");
+        }else {
+        	System.out.println("no lo estoy");
+        }
         List<Pictograma> pictogramas = new ArrayList<>();
 
         for (PictogramaOculto po : ocultos) {
             pictogramas.add(po.getPictograma());
         }
-
-        return convertirListaADTO(pictogramas);
+        
+        return convertirListaADTO(pictogramas, usuarioId);
     }
 }
