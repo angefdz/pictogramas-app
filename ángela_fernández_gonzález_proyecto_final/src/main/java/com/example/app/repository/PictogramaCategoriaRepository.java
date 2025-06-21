@@ -88,11 +88,13 @@ public interface PictogramaCategoriaRepository extends JpaRepository<PictogramaC
     	    LEFT JOIN PictogramaOculto po ON po.pictograma = pc.pictograma AND po.usuario.id = :usuarioId
     	    WHERE pc.categoria.id = :categoriaId
     	      AND pc.usuario.id = :usuarioId
+    	      AND po.id IS NULL
     	""")
     	List<Pictograma> obtenerPictogramasDeCategoriaPorUsuario(
     	    @Param("categoriaId") Long categoriaId,
     	    @Param("usuarioId") Long usuarioId
     	);
+
 
 
 }

@@ -75,26 +75,31 @@ public class AuthService {
 
     @Transactional 
     public Usuario registrarUsuarioGoogle(Usuario usuario) {
+        // Validación opcional (puedes quitarla si ya haces el control antes)
         if (usuarioRepository.buscarPorEmail(usuario.getEmail()).isPresent()) {
-            return null; 
+            throw new IllegalStateException("El usuario con ese correo ya existe");
         }
 
-        usuario.setMetodoAutenticacion("google"); 
+        usuario.setMetodoAutenticacion("google");
 
+        // Guardar el nuevo usuario
         Usuario nuevoUsuario = usuarioRepository.save(usuario);
 
+        // Crear configuración por defecto
         Configuracion configuracionDefault = new Configuracion();
-        configuracionDefault.setUsuario(nuevoUsuario); 
+        configuracionDefault.setUsuario(nuevoUsuario);
         configuracionDefault.setBotonesPorPantalla(9);
         configuracionDefault.setMostrarPorCategoria(false);
         configuracionDefault.setTipoVoz(TipoVoz.femenina);
 
         configuracionRepository.save(configuracionDefault);
 
+        // Asociar la configuración al usuario
         nuevoUsuario.setConfiguracion(configuracionDefault);
 
         return nuevoUsuario;
     }
+
 
     public Optional<Usuario> buscarPorEmail(String email) {
         return usuarioRepository.buscarPorEmail(email);

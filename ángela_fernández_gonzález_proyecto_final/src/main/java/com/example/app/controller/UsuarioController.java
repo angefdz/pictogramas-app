@@ -39,6 +39,17 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
+    
+    @PutMapping("/yo")
+    public ResponseEntity<?> actualizarUsuario(@RequestBody UsuarioSimple datos) {
+        String correo = getCorreoAutenticado();
+
+        return usuarioService.editarUsuarioPorCorreo(correo, datos)
+                .map(usuario -> ResponseEntity.ok("Usuario actualizado"))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+
     @GetMapping()
     public ResponseEntity<List<Usuario>> getUsuarios() {
         List<Usuario> usuarios = usuarioService.obtenerTodos(); // Usa el servicio

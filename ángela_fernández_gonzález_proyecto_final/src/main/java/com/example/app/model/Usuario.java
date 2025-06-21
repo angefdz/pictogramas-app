@@ -13,6 +13,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -30,8 +32,8 @@ public class Usuario {
     @Column(name = "nombre")
     private String nombre;
 
-    @NotEmpty
-    @NotNull
+    @NotBlank
+    @Email(message = "El correo electrónico no tiene un formato válido.")
     @Column(name = "correo", unique = true)
     private String email;
 

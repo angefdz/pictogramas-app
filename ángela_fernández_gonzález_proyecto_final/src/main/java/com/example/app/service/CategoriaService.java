@@ -1,8 +1,10 @@
 package com.example.app.service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,9 +17,11 @@ import com.example.app.dto.PictogramaSimple;
 import com.example.app.model.Categoria;
 import com.example.app.model.Pictograma;
 import com.example.app.model.PictogramaCategoria;
+import com.example.app.model.PictogramaOculto;
 import com.example.app.model.Usuario;
 import com.example.app.repository.CategoriaRepository;
 import com.example.app.repository.PictogramaCategoriaRepository;
+import com.example.app.repository.PictogramaOcultoRepository;
 import com.example.app.repository.PictogramaRepository;
 import com.example.app.repository.UsuarioRepository;
 
@@ -37,6 +41,10 @@ public class CategoriaService {
 
     @Autowired
     private PictogramaRepository pictogramaRepository;
+    
+    @Autowired
+    private PictogramaOcultoRepository pictogramaOcultoRepository;
+
 
     @Transactional
     public CategoriaConPictogramas crearDesdeInput(CategoriaConPictogramasInput input) {
@@ -169,8 +177,7 @@ public class CategoriaService {
 
         if (input.getPictogramas() != null && !input.getPictogramas().isEmpty()) {
             for (Long pictoId : input.getPictogramas()) {
-                Pictograma pictograma = pictogramaRepository.findById(pictoId)
-                    .orElseThrow(() -> new RuntimeException("Pictograma no encontrado: " + pictoId));
+                Pictograma pictograma = pictogramaRepository.buscarPorId(pictoId);
 
                 PictogramaCategoria relacion = new PictogramaCategoria();
                 relacion.setCategoria(guardada);
@@ -254,15 +261,20 @@ public class CategoriaService {
             pictogramaCategoriaRepository.save(nuevaRelacion);
         }
     }
-
-
     public List<CategoriaConPictogramas> obtenerCategoriasConPictogramasVisibles(Long usuarioId) {
         System.out.println("PRIMER PASO");
-        
-        List<Categoria> categorias = categoriaRepository
-            .findCategoriasVisiblesParaUsuario(usuarioId);
+
+        List<Categoria> categorias = categoriaRepository.findCategoriasVisiblesParaUsuario(usuarioId);
 
         System.out.println("Segundo");
+
+        List<PictogramaOculto> ocultos = pictogramaOcultoRepository.findByUsuarioId(usuarioId);
+        Set<Long> pictogramasOcultos = new HashSet<>();
+        for (PictogramaOculto po : ocultos) {
+            if (po.getPictograma() != null) {
+                pictogramasOcultos.add(po.getPictograma().getId());
+            }
+        }
 
         List<CategoriaConPictogramas> resultado = new ArrayList<>();
 
@@ -270,20 +282,24 @@ public class CategoriaService {
             try {
                 List<PictogramaCategoria> relaciones = pictogramaCategoriaRepository
                     .findByCategoriaIdAndUsuarioId(categoria.getId(), usuarioId);
-                
 
-                // Aquí puedes añadir el filtrado con Set si quieres (opcional)
+                Set<Long> idsAnadidos = new HashSet<>();
                 List<PictogramaSimple> pictos = new ArrayList<>();
+
                 for (PictogramaCategoria rel : relaciones) {
                     Pictograma p = rel.getPictograma();
-                    PictogramaSimple dto = new PictogramaSimple(
-                        p.getId(),
-                        p.getNombre(),
-                        p.getImagen(),
-                        p.getTipo()
-                    );
-                    pictos.add(dto);
+                    if (p != null && !pictogramasOcultos.contains(p.getId()) && idsAnadidos.add(p.getId())) {
+                        PictogramaSimple dto = new PictogramaSimple(
+                            p.getId(),
+                            p.getNombre(),
+                            p.getImagen(),
+                            p.getTipo()
+                        );
+                        System.out.println(p.getId());
+                        pictos.add(dto);
+                    }
                 }
+
                 Long usuarioCatId = (categoria.getUsuario() != null)
                     ? categoria.getUsuario().getId()
                     : null;
@@ -305,6 +321,8 @@ public class CategoriaService {
 
         return resultado;
     }
+
+
 
 
 }

@@ -39,6 +39,7 @@ public class PictogramaService {
     private UsuarioRepository usuarioRepository;
 
     public PictogramaConCategorias crearDesdeInputDTO(PictogramaConCategoriasInput input, Long usuarioId) {
+        // 1. Crear pictograma
         Pictograma pictograma = new Pictograma();
         pictograma.setNombre(input.getNombre());
         pictograma.setTipo(input.getTipo());
@@ -50,9 +51,31 @@ public class PictogramaService {
             pictograma.setUsuario(null);
         }
 
+        // 2. Guardar pictograma
         Pictograma guardado = pictogramaRepository.save(pictograma);
+
+        // 3. Crear relaciones con categorías
+        if (input.getCategorias() != null) {
+            for (Long categoriaId : input.getCategorias()) {
+                Categoria categoria = categoriaRepository.findById(categoriaId)
+                    .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + categoriaId));
+
+                PictogramaCategoria relacion = new PictogramaCategoria();
+                relacion.setPictograma(guardado);
+                relacion.setCategoria(categoria);
+
+                if (usuarioId != null) {
+                    usuarioRepository.buscarPorId(usuarioId).ifPresent(relacion::setUsuario);
+                }
+
+                pictogramaCategoriaRepository.save(relacion);
+            }
+        }
+
+        // 4. Devolver DTO completo
         return convertirADTO(guardado, usuarioId);
     }
+
 
     public PictogramaConCategorias actualizarDesdeInput(Long usuarioid, Long id, PictogramaConCategoriasInput input) {
         Pictograma pictograma = pictogramaRepository.findById(id)
@@ -141,8 +164,6 @@ public class PictogramaService {
             categoriasDTO
         );
     }
-
-
 
     public List<PictogramaSimple> obtenerPictogramasPorIds(List<Long> ids) {
         List<PictogramaSimple> resultado = new ArrayList<>();

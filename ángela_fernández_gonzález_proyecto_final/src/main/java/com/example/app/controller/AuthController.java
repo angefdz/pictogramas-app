@@ -77,25 +77,31 @@ public class AuthController {
     // Login/registro con Google
     @PostMapping("/google")
     public ResponseEntity<Map<String, Object>> loginGoogle(@RequestBody Usuario usuarioGoogle) {
+        // 1. Asegura que se registra como login con Google
         usuarioGoogle.setMetodoAutenticacion("google");
 
+        // 2. Buscar si ya existe ese email
         Optional<Usuario> usuarioOpt = authService.buscarPorEmail(usuarioGoogle.getEmail());
 
         Usuario usuario;
 
+        // 3. Si no existe, registrar; si existe, usar el existente
         if (usuarioOpt.isEmpty()) {
             usuario = authService.registrarUsuarioGoogle(usuarioGoogle);
         } else {
             usuario = usuarioOpt.get();
         }
 
+        // 4. Generar token JWT usando el email (esto está bien si tu método lo espera así)
         String token = jwtUtil.generateToken(usuario.getEmail());
 
+        // 5. Devolver token y usuarioId al frontend
         return ResponseEntity.ok(Map.of(
                 "token", token,
                 "usuarioId", usuario.getId()
         ));
     }
+
     
     @PutMapping("/cambiar-contrasena")
     public ResponseEntity<String> cambiarContrasena(@RequestBody Map<String, String> body) {
